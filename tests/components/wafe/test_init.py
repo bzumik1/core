@@ -14,7 +14,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.wafe.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.wafe.const import DOMAIN
+from homeassistant.components.wafe.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant

@@ -69,9 +69,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: This integration has no user-actionable issues to repair.
+  repair-issues: todo
   stale-devices:
     status: exempt
     comment: Each config entry is exactly one unit; removing the entry removes the device.
