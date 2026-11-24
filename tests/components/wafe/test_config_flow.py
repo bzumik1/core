@@ -82,7 +82,7 @@ async def test_user_flow_cannot_connect_recovers(
     assert result["result"].unique_id == MOCK_UNIT_ID
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_device_in_use_recovers(
     hass: HomeAssistant,
     mock_temporary_unit: MagicMock,
