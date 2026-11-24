@@ -257,7 +257,7 @@
     'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'number.wafe_w201_co2_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
