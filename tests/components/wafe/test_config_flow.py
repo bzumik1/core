@@ -1,0 +1,199 @@
+"""Tests for the WAFE config flow."""
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from modbus_connection import ModbusTcpParams, ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.wafe.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+
+from . import MOCK_ENTRY_DATA, MOCK_HOST, MOCK_TITLE, MOCK_UNIT_ID
+
+NEW_ADDRESS = {CONF_HOST: "192.168.1.50", CONF_PORT: 502}
+
+
+async def _start_user_flow(hass: HomeAssistant) -> str:
+    """Open the user flow and return its ID."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    return result["flow_id"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_temporary_unit: MagicMock) -> None:
+    """Test a unit set up from the user flow."""
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_HOST: MOCK_HOST, CONF_PORT: 1502}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_TITLE
+    assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_PORT: 1502}
+    assert result["result"].unique_id == MOCK_UNIT_ID
+    assert mock_temporary_unit.call_args.args[1:] == (
+        ModbusTcpParams(host=MOCK_HOST, port=1502),
+        1,
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_user_flow_unknown_model(
+    hass: HomeAssistant, mock_unit: MockModbusUnit
+) -> None:
+    """Test an unknown model is named after the manufacturer alone."""
+    mock_unit.input[1001] = 99
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "WAFE"
+    assert result["result"].unique_id == MOCK_UNIT_ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_user_flow_cannot_connect_recovers(
+    hass: HomeAssistant, mock_unit: MockModbusUnit
+) -> None:
+    """Test a silent unit shows an error and the flow recovers."""
+    mock_unit.fail_requests(ModbusTimeoutError())
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_UNIT_ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_device_in_use_recovers(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """Test a unit already used over other link settings shows an error."""
+    in_use = True
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        if in_use:
+            raise HomeAssistantError("in use")
+        yield mock_connection.for_unit(unit_id)
+
+    flow_id = await _start_user_flow(hass)
+    with patch(
+        "homeassistant.components.wafe.config_flow.async_get_temporary_unit",
+        side_effect=_get_temporary_unit,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, MOCK_ENTRY_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        in_use = False
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, MOCK_ENTRY_DATA
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_UNIT_ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the same unit cannot be added twice, even under another address."""
+    mock_config_entry.add_to_hass(hass)
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_HOST: "wafe.local", CONF_PORT: 502}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test moving the unit to another address."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_ADDRESS
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == NEW_ADDRESS
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_reconfigure_other_unit(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_unit: MockModbusUnit
+) -> None:
+    """Test reconfiguring to a different unit is refused."""
+    mock_config_entry.add_to_hass(hass)
+    mock_unit.input[1000] = 2000
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_ADDRESS
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_ENTRY_DATA
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_reconfigure_cannot_connect_recovers(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_unit: MockModbusUnit
+) -> None:
+    """Test a silent unit shows an error during reconfigure and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    mock_unit.fail_requests(ModbusTimeoutError())
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_ADDRESS
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_ADDRESS
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == NEW_ADDRESS
