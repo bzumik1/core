@@ -55,7 +55,6 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
         """Whether this entity's component answered the latest poll."""
         return (
             super().available
-            and self.coordinator.data is not None
             and self.entity_description.component in self.coordinator.data.updated
         )
 

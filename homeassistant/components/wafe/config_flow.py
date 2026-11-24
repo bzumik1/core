@@ -1,7 +1,6 @@
 """Config flow for WAFE heat recovery units."""
 
 from collections.abc import Mapping
-import logging
 from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
@@ -20,8 +19,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, MANUFACTURER, UNIT_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -101,8 +98,7 @@ class WafeConfigFlow(ConfigFlow, domain=DOMAIN):
             async with async_get_temporary_unit(self.hass, params, UNIT_ID) as unit:
                 device = WafeUnit(unit)
                 await device.async_update()
-        except (ModbusError, HomeAssistantError) as err:
-            _LOGGER.debug("Cannot reach a WAFE unit at %s: %s", params.endpoint, err)
+        except ModbusError, HomeAssistantError:
             return None, {"base": "cannot_connect"}
         return device, {}
 

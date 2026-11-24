@@ -28,7 +28,7 @@ async def async_get_config_entry_diagnostics(
     except ModbusError as err:
         read_error = type(err).__name__
     else:
-        raw["input"].pop(UNIT_ID_REGISTER, None)
+        del raw["input"][UNIT_ID_REGISTER]
 
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),

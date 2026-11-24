@@ -1,9 +1,9 @@
 """Tests for the WAFE config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from modbus_connection import ModbusTcpParams, ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from modbus_connection.mock import MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -82,11 +82,10 @@ async def test_user_flow_cannot_connect_recovers(
     assert result["result"].unique_id == MOCK_UNIT_ID
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
 async def test_user_flow_device_in_use_recovers(
     hass: HomeAssistant,
     mock_temporary_unit: MagicMock,
-    mock_connection: MockModbusConnection,
 ) -> None:
     """Test a unit already used over other link settings shows an error."""
     working = mock_temporary_unit.side_effect
@@ -150,11 +149,10 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_temporary_unit")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test moving the unit to another address."""
     mock_config_entry.add_to_hass(hass)

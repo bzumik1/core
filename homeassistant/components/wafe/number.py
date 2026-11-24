@@ -35,10 +35,8 @@ M3H = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
 class WafeNumberEntityDescription(NumberEntityDescription, WafeEntityDescription):
     """Describe a number backed by a holding register."""
 
-    field: str
-    """Attribute name of the field on ``Settings``."""
-    write_fn: Callable[[WafeUnit, float], Awaitable[None]] | None = None
-    """Custom write; the default writes the field as-is."""
+    value_fn: Callable[[WafeUnit], float | None]
+    set_fn: Callable[[WafeUnit, float], Awaitable[None]]
     min_fn: Callable[[WafeUnit], float | None] | None = None
     max_fn: Callable[[WafeUnit], float | None] | None = None
 
@@ -48,7 +46,8 @@ def _airflow(key: str) -> WafeNumberEntityDescription:
         key=key,
         translation_key=key,
         component="settings",
-        field=key,
+        value_fn=lambda device: getattr(device.settings, key),
+        set_fn=lambda device, value: device.settings.write(key, value),
         device_class=NumberDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=M3H,
         native_min_value=0,
@@ -65,7 +64,8 @@ def _month(key: str) -> WafeNumberEntityDescription:
         key=key,
         translation_key=key,
         component="settings",
-        field=key,
+        value_fn=lambda device: getattr(device.settings, key),
+        set_fn=lambda device, value: device.settings.write(key, value),
         native_min_value=1,
         native_max_value=12,
         native_step=1,
@@ -80,7 +80,8 @@ def _temperature_difference(key: str) -> WafeNumberEntityDescription:
         key=key,
         translation_key=key,
         component="settings",
-        field=key,
+        value_fn=lambda device: getattr(device.settings, key),
+        set_fn=lambda device, value: device.settings.write(key, value),
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=0,
@@ -97,7 +98,8 @@ def _boost_duration(key: str) -> WafeNumberEntityDescription:
         key=key,
         translation_key=key,
         component="settings",
-        field=key,
+        value_fn=lambda device: getattr(device.settings, key),
+        set_fn=lambda device, value: device.settings.write(key, value),
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=60,
@@ -113,20 +115,21 @@ NUMBER_DESCRIPTIONS: tuple[WafeNumberEntityDescription, ...] = (
         key="manual_airflow",
         translation_key="manual_airflow",
         component="settings",
-        field="manual_airflow",
+        value_fn=lambda device: device.settings.manual_airflow,
         device_class=NumberDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=M3H,
         native_step=1,
         mode=NumberMode.SLIDER,
-        min_fn=lambda d: d.settings.min_airflow,
-        max_fn=lambda d: d.settings.max_airflow,
-        write_fn=lambda d, value: d.async_set_manual_airflow(int(value)),
+        min_fn=lambda device: device.settings.min_airflow,
+        max_fn=lambda device: device.settings.max_airflow,
+        set_fn=lambda device, value: device.async_set_manual_airflow(int(value)),
     ),
     WafeNumberEntityDescription(
         key="co2_setpoint",
         translation_key="co2_setpoint",
         component="settings",
-        field="co2_setpoint",
+        value_fn=lambda device: device.settings.co2_setpoint,
+        set_fn=lambda device, value: device.settings.write("co2_setpoint", value),
         device_class=NumberDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         native_min_value=400,
@@ -144,7 +147,8 @@ NUMBER_DESCRIPTIONS: tuple[WafeNumberEntityDescription, ...] = (
         key="fan_imbalance",
         translation_key="fan_imbalance",
         component="settings",
-        field="fan_imbalance",
+        value_fn=lambda device: device.settings.fan_imbalance,
+        set_fn=lambda device, value: device.settings.write("fan_imbalance", value),
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=-100,
         native_max_value=100,
@@ -162,7 +166,10 @@ NUMBER_DESCRIPTIONS: tuple[WafeNumberEntityDescription, ...] = (
         key="preheat_start_temperature",
         translation_key="preheat_start_temperature",
         component="settings",
-        field="preheat_start_temperature",
+        value_fn=lambda device: device.settings.preheat_start_temperature,
+        set_fn=lambda device, value: device.settings.write(
+            "preheat_start_temperature", value
+        ),
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=-20,
@@ -196,10 +203,7 @@ class WafeNumber(WafeEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the value the unit reported."""
-        value: float | None = getattr(
-            self.device.settings, self.entity_description.field
-        )
-        return value
+        return self.entity_description.value_fn(self.device)
 
     @property
     @override
@@ -224,11 +228,6 @@ class WafeNumber(WafeEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Write the value to the unit."""
-        description = self.entity_description
-        if description.write_fn is not None:
-            write_fn = description.write_fn
-            await self._async_write(lambda: write_fn(self.device, value))
-            return
         await self._async_write(
-            lambda: self.device.settings.write(description.field, value)
+            lambda: self.entity_description.set_fn(self.device, value)
         )
