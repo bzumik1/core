@@ -25,16 +25,14 @@ class WafeSwitchEntityDescription(SwitchEntityDescription, WafeEntityDescription
     write_fn: Callable[[WafeUnit, bool], Awaitable[None]]
 
 
-def _function(
-    key: str, field: str, *, enabled: bool = True
-) -> WafeSwitchEntityDescription:
+def _function(key: str, *, enabled: bool = True) -> WafeSwitchEntityDescription:
     return WafeSwitchEntityDescription(
         key=key,
         translation_key=key,
         component="functions",
         entity_registry_enabled_default=enabled,
-        value_fn=lambda device: getattr(device.functions, field),
-        write_fn=lambda device, value: device.functions.write(field, value),
+        value_fn=lambda device: getattr(device.functions, key),
+        write_fn=lambda device, value: device.functions.write(key, value),
     )
 
 
@@ -65,11 +63,18 @@ SWITCH_DESCRIPTIONS: tuple[WafeSwitchEntityDescription, ...] = (
         value_fn=lambda device: device.functions.boost_active,
         write_fn=_set_boost,
     ),
-    _function("holiday", "holiday"),
-    _function("silent", "silent"),
-    _function("standby", "sleep"),
-    _function("fireplace", "fireplace", enabled=False),
-    _function("block_bypass", "bypass_off", enabled=False),
+    _function("holiday"),
+    _function("silent"),
+    _function("standby"),
+    _function("fireplace", enabled=False),
+    WafeSwitchEntityDescription(
+        key="block_bypass",
+        translation_key="block_bypass",
+        component="functions",
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.functions.bypass_off,
+        write_fn=lambda device, value: device.functions.write("bypass_off", value),
+    ),
     _setting("bypass_by_co2"),
     _setting("airflow_limit"),
 )

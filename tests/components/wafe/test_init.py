@@ -14,7 +14,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.wafe.const import DOMAIN, READINGS_SCAN_INTERVAL
+from homeassistant.components.wafe.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -89,6 +89,7 @@ async def test_setup_retries_when_every_block_is_refused(
     """Test setup is retried when the unit refuses every reading."""
     mock_unit.fail_read(1002, IllegalDataAddressError(), register_type="input")
     mock_unit.fail_read(0, IllegalDataAddressError(), register_type="coil")
+    mock_unit.fail_read(2000, IllegalDataAddressError())
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -133,14 +134,14 @@ async def test_unit_goes_unavailable_and_recovers(
 ) -> None:
     """Test entities go unavailable while the unit is silent."""
     mock_unit.fail_requests(ModbusTimeoutError())
-    freezer.tick(READINGS_SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(SENSOR_ENTITY).state == STATE_UNAVAILABLE
 
     mock_unit.fail_requests(None)
-    freezer.tick(READINGS_SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -157,7 +158,7 @@ async def test_component_failure_is_logged_once_and_recovers(
     """Test a refused component only takes its own entities down."""
     mock_unit.fail_read(0, IllegalDataAddressError(), register_type="coil")
     for _ in range(2):
-        freezer.tick(READINGS_SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -166,7 +167,7 @@ async def test_component_failure_is_logged_once_and_recovers(
     assert caplog.text.count("functions failed to refresh") == 1
 
     mock_unit.fail_read(0, None, register_type="coil")
-    freezer.tick(READINGS_SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

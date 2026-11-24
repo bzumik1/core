@@ -5,14 +5,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
-from wafe_modbus import READINGS, WafeUnit
+from wafe_modbus import WafeUnit
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import WafeDataUpdateCoordinator, WafeRuntimeData
+from .coordinator import WafeDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,17 +31,11 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
 
     def __init__(
         self,
-        runtime_data: WafeRuntimeData,
+        coordinator: WafeDataUpdateCoordinator,
         entity_description: WafeEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        coordinator = (
-            runtime_data.readings
-            if entity_description.component in READINGS
-            else runtime_data.settings
-        )
         super().__init__(coordinator)
-        self._runtime_data = runtime_data
         self.entity_description = entity_description
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id is not None
@@ -66,11 +60,7 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
         )
 
     async def _async_write(self, write: Callable[[], Awaitable[None]]) -> None:
-        """Write to the unit, then read back both polls.
-
-        A write can change values in the other poll, like a mode change that
-        also changes a setting, so both are read again right away.
-        """
+        """Write to the unit, then read it back so the entities show the result."""
         try:
             await write()
         except ValueError as err:
@@ -88,5 +78,4 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
             ) from err
-        await self._runtime_data.readings.async_refresh()
-        await self._runtime_data.settings.async_refresh()
+        await self.coordinator.async_refresh()

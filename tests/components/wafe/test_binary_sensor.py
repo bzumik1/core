@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.wafe.const import READINGS_SCAN_INTERVAL
+from homeassistant.components.wafe.const import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +57,7 @@ async def test_sub_mode_bits(
 ) -> None:
     """Test each binary sensor reads its own sub-mode bit."""
     mock_unit.input[1003] = sub_mode
-    freezer.tick(READINGS_SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

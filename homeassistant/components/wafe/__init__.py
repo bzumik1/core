@@ -8,8 +8,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import DOMAIN, READINGS_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL, UNIT_ID
-from .coordinator import WafeConfigEntry, WafeDataUpdateCoordinator, WafeRuntimeData
+from .const import DOMAIN, UNIT_ID
+from .coordinator import WafeConfigEntry, WafeDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -30,30 +30,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WafeConfigEntry) -> None
         UNIT_ID,
     )
     device = WafeUnit(unit)
-    readings = WafeDataUpdateCoordinator(
-        hass,
-        entry,
-        entry.title,
-        device,
-        device.async_update_readings,
-        READINGS_SCAN_INTERVAL,
-    )
-    settings = WafeDataUpdateCoordinator(
-        hass,
-        entry,
-        f"{entry.title} settings",
-        device,
-        device.async_update_settings,
-        SETTINGS_SCAN_INTERVAL,
-    )
-    await readings.async_config_entry_first_refresh()
+    coordinator = WafeDataUpdateCoordinator(hass, entry, device)
+    await coordinator.async_config_entry_first_refresh()
     if str(device.unit_id) != entry.unique_id:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="wrong_unit",
         )
-    await settings.async_config_entry_first_refresh()
-    entry.runtime_data = WafeRuntimeData(readings, settings)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

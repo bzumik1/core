@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.wafe.const import READINGS_SCAN_INTERVAL
+from homeassistant.components.wafe.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -56,7 +56,7 @@ async def test_state(
 ) -> None:
     """Test the unit state maps to the enum options."""
     mock_unit.input[1002] = raw
-    freezer.tick(READINGS_SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

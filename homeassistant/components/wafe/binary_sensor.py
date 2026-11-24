@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from wafe_modbus import SubMode, WafeUnit
+from wafe_modbus import WafeUnit
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,14 +30,6 @@ class WafeBinarySensorEntityDescription(
     value_fn: Callable[[WafeUnit], bool | None]
 
 
-def _sub_mode(flag: SubMode) -> Callable[[WafeUnit], bool | None]:
-    def value(device: WafeUnit) -> bool | None:
-        sub_mode = device.status.sub_mode
-        return None if sub_mode is None else flag in sub_mode
-
-    return value
-
-
 BINARY_SENSOR_DESCRIPTIONS: tuple[WafeBinarySensorEntityDescription, ...] = (
     WafeBinarySensorEntityDescription(
         key="bypass",
@@ -45,7 +37,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[WafeBinarySensorEntityDescription, ...] = (
         component="status",
         device_class=BinarySensorDeviceClass.OPENING,
         entity_registry_enabled_default=False,
-        value_fn=_sub_mode(SubMode.BYPASS),
+        value_fn=lambda device: device.status.bypass_active,
     ),
     WafeBinarySensorEntityDescription(
         key="holiday_ventilation",
@@ -53,7 +45,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[WafeBinarySensorEntityDescription, ...] = (
         component="status",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_sub_mode(SubMode.HOLIDAY_VENTILATION),
+        value_fn=lambda device: device.status.holiday_ventilation_active,
     ),
 )
 

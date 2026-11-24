@@ -229,7 +229,6 @@ class WafeNumber(WafeEntity, NumberEntity):
             write_fn = description.write_fn
             await self._async_write(lambda: write_fn(self.device, value))
             return
-        number: float = int(value) if value.is_integer() else value
         await self._async_write(
-            lambda: self.device.settings.write(description.field, number)
+            lambda: self.device.settings.write(description.field, value)
         )

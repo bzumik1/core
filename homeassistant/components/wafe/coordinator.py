@@ -1,8 +1,5 @@
 """Data update coordinator for WAFE heat recovery units."""
 
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -18,35 +15,30 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailedUnreachable,
 )
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type WafeConfigEntry = ConfigEntry[WafeDataUpdateCoordinator]
+
 
 class WafeDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Run one of the unit's update methods on its own interval."""
+    """Poll every part of a WAFE unit."""
 
     config_entry: WafeConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: WafeConfigEntry,
-        name: str,
-        device: WafeUnit,
-        poll: Callable[[], Awaitable[UpdateReport]],
-        interval: timedelta,
+        self, hass: HomeAssistant, entry: WafeConfigEntry, device: WafeUnit
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
-            name=name,
-            update_interval=interval,
+            name=entry.title,
+            update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        self._poll = poll
         self._failing: set[str] = set()
 
     @property
@@ -65,7 +57,7 @@ class WafeDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            report = await self._poll()
+            report = await self.device.async_update()
         except (ModbusConnectionError, ModbusTimeoutError) as err:
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
@@ -100,14 +92,3 @@ class WafeDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         for name in report.updated & self._failing:
             self._failing.discard(name)
             _LOGGER.info("%s: %s is available again", self.name, name)
-
-
-@dataclass
-class WafeRuntimeData:
-    """Runtime data of a WAFE config entry."""
-
-    readings: WafeDataUpdateCoordinator
-    settings: WafeDataUpdateCoordinator
-
-
-type WafeConfigEntry = ConfigEntry[WafeRuntimeData]

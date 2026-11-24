@@ -1,8 +1,6 @@
 """Tests for the WAFE config flow."""
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from modbus_connection import ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
@@ -86,37 +84,37 @@ async def test_user_flow_cannot_connect_recovers(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_device_in_use_recovers(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant,
+    mock_temporary_unit: MagicMock,
+    mock_connection: MockModbusConnection,
 ) -> None:
     """Test a unit already used over other link settings shows an error."""
-    in_use = True
-
-    @asynccontextmanager
-    async def _get_temporary_unit(
-        hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
-    ) -> AsyncIterator[MockModbusUnit]:
-        if in_use:
-            raise HomeAssistantError("in use")
-        yield mock_connection.for_unit(unit_id)
-
+    working = mock_temporary_unit.side_effect
+    mock_temporary_unit.side_effect = HomeAssistantError("in use")
     flow_id = await _start_user_flow(hass)
-    with patch(
-        "homeassistant.components.wafe.config_flow.async_get_temporary_unit",
-        side_effect=_get_temporary_unit,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, MOCK_ENTRY_DATA
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
 
-        in_use = False
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, MOCK_ENTRY_DATA
-        )
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_temporary_unit.side_effect = working
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == MOCK_UNIT_ID
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
+async def test_user_flow_unit_without_id(
+    hass: HomeAssistant, mock_unit: MockModbusUnit
+) -> None:
+    """Test a unit that reports no ID is refused."""
+    mock_unit.input[1000] = 0
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_unit_id"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -116,7 +116,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[number.wafe_w201_bypass_minimum_temperature_difference-entry]
@@ -236,7 +236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[number.wafe_w201_co2_setpoint-entry]

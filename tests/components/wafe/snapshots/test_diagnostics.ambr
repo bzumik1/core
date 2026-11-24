@@ -5,16 +5,10 @@
       'host': '**REDACTED**',
       'port': 502,
     }),
+    'failed': dict({
+    }),
     'model': 'W201',
     'read_error': None,
-    'readings': dict({
-      'failed': dict({
-      }),
-      'updated': list([
-        'functions',
-        'status',
-      ]),
-    }),
     'registers': dict({
       'coil': dict({
         '0': True,
@@ -121,12 +115,10 @@
         '1012': 119,
       }),
     }),
-    'settings': dict({
-      'failed': dict({
-      }),
-      'updated': list([
-        'settings',
-      ]),
-    }),
+    'updated': list([
+      'functions',
+      'settings',
+      'status',
+    ]),
   })
 # ---

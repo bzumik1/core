@@ -19,8 +19,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: WafeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry, with the raw register map."""
-    runtime_data = entry.runtime_data
-    device = runtime_data.readings.device
+    coordinator = entry.runtime_data
+    device = coordinator.device
     raw: dict[str, Any] | None = None
     read_error: str | None = None
     try:
@@ -33,20 +33,8 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
         "model": device.model.name if device.model is not None else None,
-        "readings": {
-            "updated": sorted(runtime_data.readings.data.updated),
-            "failed": {
-                name: str(err)
-                for name, err in runtime_data.readings.data.failed.items()
-            },
-        },
-        "settings": {
-            "updated": sorted(runtime_data.settings.data.updated),
-            "failed": {
-                name: str(err)
-                for name, err in runtime_data.settings.data.failed.items()
-            },
-        },
+        "updated": sorted(coordinator.data.updated),
+        "failed": {name: str(err) for name, err in coordinator.data.failed.items()},
         "read_error": read_error,
         "registers": raw,
     }
