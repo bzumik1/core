@@ -149,7 +149,7 @@
     'object_id_base': 'Bypass minimum temperature difference',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Bypass minimum temperature difference',
     'platform': 'wafe',
@@ -164,7 +164,7 @@
 # name: test_all_entities[number.wafe_w201_bypass_minimum_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Bypass minimum temperature difference',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 20,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
@@ -695,7 +695,7 @@
     'object_id_base': 'Night bypass minimum temperature difference',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Night bypass minimum temperature difference',
     'platform': 'wafe',
@@ -710,7 +710,7 @@
 # name: test_all_entities[number.wafe_w201_night_bypass_minimum_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Night bypass minimum temperature difference',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 20,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,

@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_HOST, MOCK_UNIT_ID
 
-SWITCH_ENTITY = "switch.wafe_w201_short_boost"
+SWITCH_ENTITY = "switch.wafe_w201_boost"
 SENSOR_ENTITY = "sensor.wafe_w201_outdoor_temperature"
 
 
@@ -94,6 +94,20 @@ async def test_setup_retries_when_every_block_is_refused(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_fails_for_another_unit(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_unit: MockModbusUnit
+) -> None:
+    """Test setup fails when a different unit answers at the configured address."""
+    mock_unit.input[1000] = 2000
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "wrong_unit"
 
 
 @pytest.mark.usefixtures("mock_get_unit")

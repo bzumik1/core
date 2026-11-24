@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from wafe_modbus import UpdateReport, WafeUnit
@@ -52,9 +52,11 @@ class WafeDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @property
     def device_info(self) -> DeviceInfo:
         """Describe the unit to the device registry."""
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id is not None
         model = self.device.model
         return DeviceInfo(
-            identifiers={(DOMAIN, str(self.device.unit_id))},
+            identifiers={(DOMAIN, self.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=model.name if model is not None else None,
             name=self.config_entry.title,

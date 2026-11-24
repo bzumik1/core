@@ -1,14 +1,8 @@
 {
   "entity": {
-    "binary_sensor": {
-      "bypass": {
-        "default": "mdi:valve-closed",
-        "state": {
-          "on": "mdi:valve-open"
-        }
-      },
-      "holiday_ventilation": {
-        "default": "mdi:beach"
+    "button": {
+      "long_boost": {
+        "default": "mdi:fan-clock"
       }
     },
     "number": {
@@ -78,14 +72,14 @@
       "airflow_limit": {
         "default": "mdi:fan-chevron-down"
       },
+      "block_bypass": {
+        "default": "mdi:valve-closed"
+      },
+      "boost": {
+        "default": "mdi:fan-plus"
+      },
       "bypass_by_co2": {
         "default": "mdi:molecule-co2"
-      },
-      "bypass_disabled": {
-        "default": "mdi:valve-closed"
-      },
-      "bypass_off": {
-        "default": "mdi:valve-closed"
       },
       "fireplace": {
         "default": "mdi:fireplace"
@@ -93,16 +87,10 @@
       "holiday": {
         "default": "mdi:beach"
       },
-      "long_boost": {
-        "default": "mdi:fan-plus"
-      },
-      "short_boost": {
-        "default": "mdi:fan-plus"
-      },
       "silent": {
         "default": "mdi:volume-off"
       },
-      "sleep": {
+      "standby": {
         "default": "mdi:power-sleep"
       }
     }

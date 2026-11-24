@@ -48,6 +48,10 @@ class WafeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask where the unit is, then check that it answers."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            # The unit serves one client at a time, so probing a configured unit fails.
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             device, errors = await self._async_probe(user_input)
             if device is not None:
                 await self.async_set_unique_id(str(device.unit_id))

@@ -50,12 +50,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: The unit does not announce itself over any discovery protocol.
-  discovery:
-    status: exempt
-    comment: The unit does not announce itself over any discovery protocol.
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

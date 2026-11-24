@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection import IllegalDataValueError, ModbusTimeoutError
+from modbus_connection.mock import MockModbusUnit, WriteEvent
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -20,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+BOOST_ENTITY = "switch.wafe_w201_boost"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_get_unit")
@@ -38,15 +40,15 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "coil"),
     [
-        pytest.param("switch.wafe_w201_short_boost", 7, id="short_boost"),
-        pytest.param("switch.wafe_w201_long_boost", 8, id="long_boost"),
         pytest.param("switch.wafe_w201_holiday_mode", 5, id="holiday"),
         pytest.param("switch.wafe_w201_silent_mode", 6, id="silent"),
-        pytest.param("switch.wafe_w201_standby", 4, id="sleep"),
-        pytest.param("switch.wafe_w201_bypass_off", 9, id="bypass_off"),
+        pytest.param("switch.wafe_w201_standby", 4, id="standby"),
+        pytest.param("switch.wafe_w201_fireplace_mode", 10, id="fireplace"),
+        pytest.param("switch.wafe_w201_block_bypass", 9, id="block_bypass"),
     ],
 )
 async def test_function_switch(
@@ -74,7 +76,6 @@ async def test_function_switch(
 @pytest.mark.parametrize(
     ("entity_id", "register"),
     [
-        pytest.param("switch.wafe_w201_bypass_disabled", 2026, id="bypass_disabled"),
         pytest.param("switch.wafe_w201_bypass_airflow_by_co2", 2025, id="by_co2"),
         pytest.param("switch.wafe_w201_airflow_limit", 2012, id="airflow_limit"),
     ],
@@ -100,20 +101,72 @@ async def test_setting_switch(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
-async def test_switch_write_failed(
+async def test_boost_switch(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
+    """Test the boost switch starts the short boost and ends any boost."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: BOOST_ENTITY}, blocking=True
+    )
+    assert mock_unit.coil[7] is True
+    assert hass.states.get(BOOST_ENTITY).state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: BOOST_ENTITY}, blocking=True
+    )
+    assert mock_unit.coil[7] is False
+    assert hass.states.get(BOOST_ENTITY).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_boost_switch_shows_long_boost(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_unit: MockModbusUnit,
+) -> None:
+    """Test a running long boost shows as on, and turning off clears the boost."""
+    mock_unit.coil[8] = True
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(BOOST_ENTITY).state == STATE_ON
+
+    writes: list[WriteEvent] = []
+    mock_unit.on_write(writes.append)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: BOOST_ENTITY}, blocking=True
+    )
+
+    assert [(w.register_type, w.address, w.values) for w in writes] == [
+        ("coil", 7, [False])
+    ]
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(ModbusTimeoutError(), "unit_unreachable", id="unreachable"),
+        pytest.param(IllegalDataValueError(), "write_failed", id="rejected"),
+    ],
+)
+async def test_switch_write_failed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_unit: MockModbusUnit,
+    error: Exception,
+    translation_key: str,
+) -> None:
     """Test a failed write raises a translated error."""
-    mock_unit.fail_write(7, ModbusTimeoutError(), register_type="coil")
+    mock_unit.fail_write(7, error, register_type="coil")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wafe_w201_short_boost"},
+            {ATTR_ENTITY_ID: BOOST_ENTITY},
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "write_failed"
+    assert exc_info.value.translation_key == translation_key

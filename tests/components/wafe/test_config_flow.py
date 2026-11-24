@@ -119,11 +119,28 @@ async def test_user_flow_device_in_use_recovers(
     assert result["result"].unique_id == MOCK_UNIT_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_same_address_aborts_before_probing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_temporary_unit: MagicMock,
+) -> None:
+    """Test a configured address aborts without connecting to the unit."""
+    mock_config_entry.add_to_hass(hass)
+    flow_id = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_ENTRY_DATA)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_temporary_unit.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_temporary_unit")
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the same unit cannot be added twice, even under another address."""
+    """Test the same unit reached under another name is recognized by its ID."""
     mock_config_entry.add_to_hass(hass)
     flow_id = await _start_user_flow(hass)
 

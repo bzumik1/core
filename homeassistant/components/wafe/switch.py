@@ -1,7 +1,10 @@
 """Switches of WAFE heat recovery units."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
+
+from wafe_modbus import WafeUnit
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -16,44 +19,59 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class WafeSwitchEntityDescription(SwitchEntityDescription, WafeEntityDescription):
-    """Describe a switch backed by a coil or a 0/1 setting."""
+    """Describe a WAFE switch."""
 
-    field: str
-    """Attribute name of the field on the component."""
+    value_fn: Callable[[WafeUnit], bool | None]
+    write_fn: Callable[[WafeUnit, bool], Awaitable[None]]
 
 
-def _function(key: str, *, enabled: bool = True) -> WafeSwitchEntityDescription:
+def _function(
+    key: str, field: str, *, enabled: bool = True
+) -> WafeSwitchEntityDescription:
     return WafeSwitchEntityDescription(
         key=key,
         translation_key=key,
         component="functions",
-        field=key,
         entity_registry_enabled_default=enabled,
+        value_fn=lambda device: getattr(device.functions, field),
+        write_fn=lambda device, value: device.functions.write(field, value),
     )
 
 
-def _setting(key: str, *, enabled: bool = True) -> WafeSwitchEntityDescription:
+def _setting(key: str) -> WafeSwitchEntityDescription:
     return WafeSwitchEntityDescription(
         key=key,
         translation_key=key,
         component="settings",
-        field=key,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=enabled,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: getattr(device.settings, key),
+        write_fn=lambda device, value: device.settings.write(key, value),
     )
 
 
+async def _set_boost(device: WafeUnit, value: bool) -> None:
+    if value:
+        await device.functions.async_start_boost()
+    else:
+        await device.functions.async_stop_boost()
+
+
 SWITCH_DESCRIPTIONS: tuple[WafeSwitchEntityDescription, ...] = (
-    _function("short_boost"),
-    _function("long_boost"),
-    _function("holiday"),
-    _function("silent"),
-    _function("sleep"),
-    _function("fireplace", enabled=False),
-    _function("bypass_off"),
-    _setting("bypass_disabled", enabled=False),
-    _setting("bypass_by_co2", enabled=False),
-    _setting("airflow_limit", enabled=False),
+    WafeSwitchEntityDescription(
+        key="boost",
+        translation_key="boost",
+        component="functions",
+        value_fn=lambda device: device.functions.boost_active,
+        write_fn=_set_boost,
+    ),
+    _function("holiday", "holiday"),
+    _function("silent", "silent"),
+    _function("standby", "sleep"),
+    _function("fireplace", "fireplace", enabled=False),
+    _function("block_bypass", "bypass_off", enabled=False),
+    _setting("bypass_by_co2"),
+    _setting("airflow_limit"),
 )
 
 
@@ -78,24 +96,18 @@ class WafeSwitch(WafeEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return the state the unit reported."""
-        value: bool | None = getattr(
-            getattr(self.device, self.entity_description.component),
-            self.entity_description.field,
-        )
-        return value
-
-    async def _async_set(self, value: bool) -> None:
-        component = getattr(self.device, self.entity_description.component)
-        await self._async_write(
-            lambda: component.write(self.entity_description.field, value)
-        )
+        return self.entity_description.value_fn(self.device)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the function on."""
-        await self._async_set(True)
+        await self._async_write(
+            lambda: self.entity_description.write_fn(self.device, True)
+        )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the function off."""
-        await self._async_set(False)
+        await self._async_write(
+            lambda: self.entity_description.write_fn(self.device, False)
+        )

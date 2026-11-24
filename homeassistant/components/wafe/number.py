@@ -43,9 +43,7 @@ class WafeNumberEntityDescription(NumberEntityDescription, WafeEntityDescription
     max_fn: Callable[[WafeUnit], float | None] | None = None
 
 
-def _airflow(
-    key: str, *, enabled: bool = False, category: bool = True
-) -> WafeNumberEntityDescription:
+def _airflow(key: str) -> WafeNumberEntityDescription:
     return WafeNumberEntityDescription(
         key=key,
         translation_key=key,
@@ -57,8 +55,8 @@ def _airflow(
         native_max_value=1000,
         native_step=1,
         mode=NumberMode.BOX,
-        entity_category=EntityCategory.CONFIG if category else None,
-        entity_registry_enabled_default=enabled,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     )
 
 
@@ -83,7 +81,7 @@ def _temperature_difference(key: str) -> WafeNumberEntityDescription:
         translation_key=key,
         component="settings",
         field=key,
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=0,
         native_max_value=20,

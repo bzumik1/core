@@ -49,6 +49,106 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[switch.wafe_w201_block_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.wafe_w201_block_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Block bypass',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block bypass',
+    'platform': 'wafe',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_bypass',
+    'unique_id': '1045_block_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.wafe_w201_block_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Block bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wafe_w201_block_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.wafe_w201_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.wafe_w201_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boost',
+    'platform': 'wafe',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'boost',
+    'unique_id': '1045_boost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.wafe_w201_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Boost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wafe_w201_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[switch.wafe_w201_bypass_airflow_by_co2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -93,106 +193,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.wafe_w201_bypass_airflow_by_co2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_bypass_disabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wafe_w201_bypass_disabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Bypass disabled',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Bypass disabled',
-    'platform': 'wafe',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'bypass_disabled',
-    'unique_id': '1045_bypass_disabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_bypass_disabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Bypass disabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.wafe_w201_bypass_disabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_bypass_off-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.wafe_w201_bypass_off',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Bypass off',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Bypass off',
-    'platform': 'wafe',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'bypass_off',
-    'unique_id': '1045_bypass_off',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_bypass_off-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Bypass off',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.wafe_w201_bypass_off',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -299,106 +299,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[switch.wafe_w201_long_boost-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.wafe_w201_long_boost',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Long boost',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Long boost',
-    'platform': 'wafe',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'long_boost',
-    'unique_id': '1045_long_boost',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_long_boost-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Long boost',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.wafe_w201_long_boost',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_short_boost-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('wafe', '1045')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.wafe_w201_short_boost',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Short boost',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Short boost',
-    'platform': 'wafe',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'short_boost',
-    'unique_id': '1045_short_boost',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[switch.wafe_w201_short_boost-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Short boost',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.wafe_w201_short_boost',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_entities[switch.wafe_w201_silent_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -481,8 +381,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sleep',
-    'unique_id': '1045_sleep',
+    'translation_key': 'standby',
+    'unique_id': '1045_standby',
     'unit_of_measurement': None,
   })
 # ---

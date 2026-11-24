@@ -7,6 +7,7 @@ from typing import override
 from wafe_modbus import SubMode, WafeUnit
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -42,12 +43,15 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[WafeBinarySensorEntityDescription, ...] = (
         key="bypass",
         translation_key="bypass",
         component="status",
+        device_class=BinarySensorDeviceClass.OPENING,
+        entity_registry_enabled_default=False,
         value_fn=_sub_mode(SubMode.BYPASS),
     ),
     WafeBinarySensorEntityDescription(
         key="holiday_ventilation",
         translation_key="holiday_ventilation",
         component="status",
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_sub_mode(SubMode.HOLIDAY_VENTILATION),
     ),

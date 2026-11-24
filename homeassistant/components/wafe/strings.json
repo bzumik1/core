@@ -41,6 +41,11 @@
         "name": "Holiday ventilation"
       }
     },
+    "button": {
+      "long_boost": {
+        "name": "Long boost"
+      }
+    },
     "number": {
       "bypass_airflow": {
         "name": "Bypass airflow"
@@ -132,14 +137,14 @@
       "airflow_limit": {
         "name": "Airflow limit"
       },
+      "block_bypass": {
+        "name": "Block bypass"
+      },
+      "boost": {
+        "name": "Boost"
+      },
       "bypass_by_co2": {
         "name": "Bypass airflow by CO2"
-      },
-      "bypass_disabled": {
-        "name": "Bypass disabled"
-      },
-      "bypass_off": {
-        "name": "Bypass off"
       },
       "fireplace": {
         "name": "Fireplace mode"
@@ -147,16 +152,10 @@
       "holiday": {
         "name": "Holiday mode"
       },
-      "long_boost": {
-        "name": "Long boost"
-      },
-      "short_boost": {
-        "name": "Short boost"
-      },
       "silent": {
         "name": "Silent mode"
       },
-      "sleep": {
+      "standby": {
         "name": "Standby"
       }
     }
@@ -176,6 +175,9 @@
     },
     "write_failed": {
       "message": "The unit rejected the change."
+    },
+    "wrong_unit": {
+      "message": "A different WAFE unit answers at the configured address. Reconfigure the integration with the address of the unit you set up."
     }
   }
 }

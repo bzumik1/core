@@ -24,7 +24,7 @@
     'object_id_base': 'Bypass',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Bypass',
     'platform': 'wafe',
@@ -39,6 +39,7 @@
 # name: test_all_entities[binary_sensor.wafe_w201_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Bypass',
     }),
     'context': <ANY>,
@@ -74,7 +75,7 @@
     'object_id_base': 'Holiday ventilation',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Holiday ventilation',
     'platform': 'wafe',
@@ -89,6 +90,7 @@
 # name: test_all_entities[binary_sensor.wafe_w201_holiday_ventilation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WAFE W201 Holiday ventilation',
     }),
     'context': <ANY>,

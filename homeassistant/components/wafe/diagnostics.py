@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from .coordinator import WafeConfigEntry
 
 TO_REDACT = {CONF_HOST}
+# The unit's ID in the vendor cloud, which is also the config entry's unique ID.
+UNIT_ID_REGISTER = 1000
 
 
 async def async_get_config_entry_diagnostics(
@@ -25,6 +27,8 @@ async def async_get_config_entry_diagnostics(
         raw = await device.async_read_raw()
     except ModbusError as err:
         read_error = type(err).__name__
+    else:
+        raw["input"].pop(UNIT_ID_REGISTER, None)
 
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),

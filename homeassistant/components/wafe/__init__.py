@@ -6,12 +6,14 @@ from wafe_modbus import WafeUnit
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import READINGS_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL, UNIT_ID
+from .const import DOMAIN, READINGS_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL, UNIT_ID
 from .coordinator import WafeConfigEntry, WafeDataUpdateCoordinator, WafeRuntimeData
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -45,6 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WafeConfigEntry) -> None
         SETTINGS_SCAN_INTERVAL,
     )
     await readings.async_config_entry_first_refresh()
+    if str(device.unit_id) != entry.unique_id:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="wrong_unit",
+        )
     await settings.async_config_entry_first_refresh()
     entry.runtime_data = WafeRuntimeData(readings, settings)
 

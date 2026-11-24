@@ -2,9 +2,9 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from wafe_modbus import READINGS, WafeUnit
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -43,7 +43,11 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._runtime_data = runtime_data
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.device.unit_id}_{entity_description.key}"
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id is not None
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{entity_description.key}"
+        )
         self._attr_device_info = coordinator.device_info
 
     @property
@@ -64,8 +68,8 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
     async def _async_write(self, write: Callable[[], Awaitable[None]]) -> None:
         """Write to the unit, then read back both polls.
 
-        A write can change values in the other poll, like a setting that also
-        sets a coil, so both are read again right away.
+        A write can change values in the other poll, like a mode change that
+        also changes a setting, so both are read again right away.
         """
         try:
             await write()
@@ -73,6 +77,11 @@ class WafeEntity(CoordinatorEntity[WafeDataUpdateCoordinator]):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_value",
+            ) from err
+        except (ModbusConnectionError, ModbusTimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unit_unreachable",
             ) from err
         except ModbusError as err:
             raise HomeAssistantError(

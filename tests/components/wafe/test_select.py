@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusUnit, WriteEvent
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -75,7 +75,7 @@ async def test_select_option_write_failed(
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test a failed write raises a translated error."""
-    mock_unit.fail_write(2, ModbusTimeoutError(), register_type="coil")
+    mock_unit.fail_write(2, IllegalDataValueError(), register_type="coil")
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -88,10 +88,10 @@ async def test_select_option_write_failed(
     assert exc_info.value.translation_key == "write_failed"
 
 
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_no_single_mode_is_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_unit: object,
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test the mode is unknown while no single mode coil is set."""

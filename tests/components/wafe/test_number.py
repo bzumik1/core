@@ -2,15 +2,13 @@
 
 from unittest.mock import patch
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
@@ -37,15 +35,6 @@ async def test_all_entities(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_manual_airflow_limits_follow_the_unit(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test the manual airflow slider spans the unit's configured limits."""
-    state = hass.states.get(MANUAL_AIRFLOW)
-    assert state.attributes[ATTR_MIN] == 50
-    assert state.attributes[ATTR_MAX] == 220
 
 
 async def test_set_manual_airflow(
@@ -139,7 +128,7 @@ async def test_set_value_write_failed(
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test a failed write raises a translated error."""
-    mock_unit.fail_write(2006, ModbusTimeoutError())
+    mock_unit.fail_write(2006, IllegalDataValueError())
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
